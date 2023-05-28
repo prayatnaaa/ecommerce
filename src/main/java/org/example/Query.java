@@ -3,6 +3,8 @@ package org.example;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.*;
 
 public class Query {
@@ -111,7 +113,57 @@ public class Query {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-        System.out.println("Data User Id" + userId + "has been removed!");
+        System.out.println("Data User Id " + userId + " has been removed!");
+    }
+
+    public String postMethod(JSONObject reqBodyJSON){
+        String first_name = reqBodyJSON.optString("first_name");
+        String last_name = reqBodyJSON.optString("last_name");
+        String email = reqBodyJSON.optString("email");
+        String phone_number = reqBodyJSON.optString("phone_number");
+        String type = reqBodyJSON.optString("type");
+        PreparedStatement statement = null;
+        int rowsAffected = 0;
+
+        String query = "INSERT INTO users (first_name, last_name, email, phone_number, type) VALUES(?,?,?,?,?)";
+        try{
+            statement = this.connection().prepareStatement(query);
+            statement.setString(1, first_name);
+            statement.setString(2, last_name);
+            statement.setString(3, email);
+            statement.setString(4, phone_number);
+            statement.setString(5, type);
+            rowsAffected = statement.executeUpdate();
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        return rowsAffected + " row has been inserted!";
+    }
+
+    public String putMethod(String path, JSONObject reqBodyJSON){
+        String[] pathParts = path.split("/");
+        int userId = Integer.parseInt(pathParts[pathParts.length - 1]);
+        String first_name = reqBodyJSON.optString("first_name");
+        String last_name = reqBodyJSON.optString("last_name");
+        String email = reqBodyJSON.optString("email");
+        String phone_number = reqBodyJSON.optString("phone_number");
+        String type = reqBodyJSON.optString("type");
+        PreparedStatement statement = null;
+        int rowsAffected = 0;
+
+        String query = "UPDATE users SET first_name = ?, last_name = ?, email = ?, phone_number = ?, type = ? WHERE id=" +userId;
+        try {
+            statement = this.connection().prepareStatement(query);
+            statement.setString(1, first_name);
+            statement.setString(2, last_name);
+            statement.setString(3, email);
+            statement.setString(4, phone_number);
+            statement.setString(5, type);
+            rowsAffected = statement.executeUpdate();
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        return rowsAffected + " row has been updated!";
     }
 }
 

@@ -267,8 +267,39 @@ public class UsersQuery {
         return response;
     }
 
-    public void usersType(){
+    public String usersType(String[] userType){
 
+        JSONArray jsonArray = new JSONArray();
+        String query = "SELECT * FROM users WHERE type=" + userType;
+
+        try (Connection conn = connection();
+             Statement statement = conn.createStatement();
+             ResultSet rs = statement.executeQuery(query);) {
+
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String email = rs.getString("email");
+                String phone_number = rs.getString("phone_number");
+                String type = rs.getString("type");
+
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("id", id);
+                jsonObject.put("first_name", first_name);
+                jsonObject.put("last_name", last_name);
+                jsonObject.put("email", email);
+                jsonObject.put("phone_number", phone_number);
+                jsonObject.put("type", type);
+
+                jsonArray.put(jsonObject);
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return jsonArray.toString();
     }
 }
 

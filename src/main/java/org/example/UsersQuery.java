@@ -1,13 +1,11 @@
 package org.example;
-
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.*;
 
-public class Query {
+public class UsersQuery {
     public static void connect() {
         String rootPath = System.getProperty("user.dir");
         Connection conn = null;
@@ -31,12 +29,11 @@ public class Query {
         }
     }
 
-    private Connection connection() {
+    private static Connection connection() {
 
         String rootPath = System.getProperty("user.dir");
         String url = "jdbc:sqlite:" + rootPath + "/db_ecommerce.db";
         Connection conn = null;
-
         try {
             conn = DriverManager.getConnection(url);
         } catch (SQLException e) {
@@ -44,6 +41,8 @@ public class Query {
         }
         return conn;
     }
+
+
 
     public JSONArray selectAll() throws SQLException {
         JSONArray jsonArray = new JSONArray();
@@ -56,13 +55,20 @@ public class Query {
 
             while (rs.next()) {
                 int id = rs.getInt("id");
-                String lastName = rs.getString("last_name");
+                String first_name = rs.getString("first_name");
+                String email = rs.getString("email");
+                String last_name = rs.getString("last_name");
+                String phone_number = rs.getString("phone_number");
                 String type = rs.getString("type");
 
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("id", id);
-                jsonObject.put("last_name", lastName);
+                jsonObject.put("first_name", first_name);
+                jsonObject.put("last_name", last_name);
+                jsonObject.put("email", email);
+                jsonObject.put("phone_number", phone_number);
                 jsonObject.put("type", type);
+
 
                 // Add the user JSON object to the array
                 jsonArray.put(jsonObject);
@@ -76,25 +82,29 @@ public class Query {
 
     public JSONArray selectUser(int userId) throws SQLException {
         JSONArray jsonArray = new JSONArray();
-        String sql = "SELECT * FROM users WHERE id=" + userId;
+        String query = "SELECT * FROM users WHERE id=" + userId;
 
         try (Connection conn = connection();
              Statement statement = conn.createStatement();
-             ResultSet rs = statement.executeQuery(sql);) {
+             ResultSet rs = statement.executeQuery(query);) {
 
 
             while (rs.next()) {
                 int id = rs.getInt("id");
-                String lastName = rs.getString("last_name");
+                String first_name = rs.getString("first_name");
+                String last_name = rs.getString("last_name");
+                String email = rs.getString("email");
+                String phone_number = rs.getString("phone_number");
                 String type = rs.getString("type");
 
-                // Create a JSON object for the user
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("id", id);
-                jsonObject.put("last_name", lastName);
+                jsonObject.put("first_name", first_name);
+                jsonObject.put("last_name", last_name);
+                jsonObject.put("email", email);
+                jsonObject.put("phone_number", phone_number);
                 jsonObject.put("type", type);
 
-                // Add the user JSON object to the array
                 jsonArray.put(jsonObject);
             }
 
@@ -105,10 +115,10 @@ public class Query {
     }
 
     public void deleteUser(int userId) {
-        String sql = "DELETE FROM users WHERE id=" + userId;
+        String query = "DELETE FROM users WHERE id=" + userId;
         try (Connection conn = connection();
              Statement statement = conn.createStatement();) {
-            statement.executeUpdate(sql);
+            statement.executeUpdate(query);
 
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -164,6 +174,101 @@ public class Query {
             e.printStackTrace();
         }
         return rowsAffected + " row has been updated!";
+    }
+
+    public static String getUsersProducts(String[] path){
+        String response = "";
+        if(path.length == 2){
+            response = usersProducts(0);
+        }else if(path.length == 3){
+            response = usersProducts(Integer.parseInt(path[2]));
+        }else if(path.length == 4){
+            response = usersProducts(Integer.parseInt(path[2]));
+        }
+        return response;
+    }
+
+
+    public static String usersProducts(int userId){
+
+        JSONArray jsonArray = new JSONArray();
+        String query = "SELECT * FROM products WHERE seller=" + userId;
+
+        try (Connection conn = connection();
+             Statement statement = conn.createStatement();
+             ResultSet rs = statement.executeQuery(query);) {
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String seller = rs.getString("seller");
+                String title = rs.getString("title");
+                String description = rs.getString("description");
+                String price = rs.getString("price");
+                String stock = rs.getString("stock");
+
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("id", id);
+                jsonObject.put("seller", seller);
+                jsonObject.put("title", title);
+                jsonObject.put("description", description);
+                jsonObject.put("price", price);
+                jsonObject.put("stock", stock);
+
+                jsonArray.put(jsonObject);
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return jsonArray.toString();
+    }
+
+    public static String usersOrders(int userId){
+
+        JSONArray jsonArray = new JSONArray();
+        String query = "SELECT * FROM orders WHERE buyer=" + userId;
+
+        try (Connection conn = connection();
+             Statement statement = conn.createStatement();
+             ResultSet rs = statement.executeQuery(query);) {
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String buyer = rs.getString("buyer");
+                int note = rs.getInt("note");
+                int total = rs.getInt("total");
+                int discount = rs.getInt("discount");
+                int is_paid = rs.getInt("is_paid");
+
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("id", id);
+                jsonObject.put("buyer", buyer);
+                jsonObject.put("note", note);
+                jsonObject.put("total", total);
+                jsonObject.put("discount", discount);
+                jsonObject.put("is_paid", is_paid);
+
+                jsonArray.put(jsonObject);
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return jsonArray.toString();
+    }public static String getUsersOrders(String[] path){
+        String response = "";
+        if(path.length == 2){
+            response = usersOrders(0);
+        }else if(path.length == 3){
+            response = usersOrders(Integer.parseInt(path[2]));
+        }else if(path.length == 4){
+            response = usersOrders(Integer.parseInt(path[2]));
+        }
+        return response;
+    }
+
+    public void usersType(){
+
     }
 }
 

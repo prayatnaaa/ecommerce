@@ -26,13 +26,14 @@ private static final int p=8068;
 
             @Override
             public void handle(HttpExchange exchange) throws IOException {
-                Query connect = new Query();
+                UsersQuery connect = new UsersQuery();
+                ProductsQuery connect2 = new ProductsQuery();
 
                 String ResponseToSendBack = "";
                 OutputStream outputStream = exchange.getResponseBody();
                 String method = exchange.getRequestMethod();
                 String path = exchange.getRequestURI().getPath();
-
+                String[] pathRoot = exchange.getRequestURI().getPath().split("/");
 
                 if ("GET".equals(method) && "/users".equals(path)) {
                     outputStream = exchange.getResponseBody();
@@ -41,22 +42,28 @@ private static final int p=8068;
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-
                 } else if ("GET".equals(method) && path.matches("/user/\\d+")) {
                     String[] pathParts = path.split("/");
                     int userId = Integer.parseInt(pathParts[pathParts.length - 1]);
-
                     outputStream = exchange.getResponseBody();
                     try {
                         ResponseToSendBack = connect.selectUser(userId).toString();
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
+                } else if("GET".equals(method)
+                        && pathRoot[1].matches("user")
+                        && pathRoot[3].matches("product")){
+                    ResponseToSendBack = UsersQuery.getUsersProducts(pathRoot);
+                } else if("GET".equals(method)
+                        && pathRoot[1].matches("user")
+                        && pathRoot[3].matches("order")){
+                    ResponseToSendBack = UsersQuery.getUsersOrders(pathRoot);
+                }
 
-                } else if("DELETE".equals(method) && path.matches("/user/\\d+")){
+                else if("DELETE".equals(method) && path.matches("/user/\\d+")){
                     String[] pathParts = path.split("/");
                     int userId = Integer.parseInt(pathParts[pathParts.length - 1]);
-
                     outputStream = exchange.getResponseBody();
                     try {
                         connect.deleteUser(userId);
@@ -66,21 +73,42 @@ private static final int p=8068;
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                } else if("POST".equals(method) && path.matches("/user")){
+                }
+
+                else if("POST".equals(method) && path.matches("/user")){
                     JSONObject requestBodyJSON = parseRequestBody(exchange.getRequestBody());
                     ResponseToSendBack = connect.postMethod(requestBodyJSON);
-                } else if ("PUT".equals(method) && path.matches("/user/\\d+")){
+                }
+
+                else if ("PUT".equals(method) && path.matches("/user/\\d+")){
                     JSONObject requestBodyJSON = parseRequestBody(exchange.getRequestBody());
                     ResponseToSendBack = connect.putMethod(path, requestBodyJSON);
-
                 }
+
+                else if ("GET".equals(method) && path.matches("/product/\\d+")){
+                    String[] pathParts = exchange.getRequestURI().getPath().split("/");
+                    int productsId = Integer.parseInt(pathParts[pathParts.length - 1]);
+                    outputStream = exchange.getResponseBody();
+                    try {
+                        ResponseToSendBack = connect2.selectProduct(productsId).toString();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }else if ("GET".equals(method) && "/products".equals(path)) {
+                    outputStream = exchange.getResponseBody();
+                    try {
+                        ResponseToSendBack = connect2.selectAll().toString();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
                 exchange.getResponseHeaders().set("Content-Type", "application/json");
                 exchange.sendResponseHeaders(200, ResponseToSendBack.length());
                 outputStream.write(ResponseToSendBack.getBytes());
                 outputStream.flush();
                 outputStream.close();
             }
-
         }
 
         private static JSONObject parseRequestBody(InputStream reqBody) throws IOException{

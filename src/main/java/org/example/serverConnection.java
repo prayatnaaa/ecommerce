@@ -3,6 +3,7 @@ package org.example;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -22,9 +23,41 @@ private static final int p=8068;
         httpServer.setExecutor(Executors.newSingleThreadExecutor());
         httpServer.start();
     }
-        private static class Handler implements HttpHandler {
+    private static class Handler implements HttpHandler {
 
-            @Override
+        String type;
+        String field;
+        String cond;
+        int val;
+
+        public void queryCheck(String query){
+
+            String[] querys = query.split("&");
+            for ( String i : querys) {
+                if(i.contains("type")){
+                    this.type = i.substring(i.lastIndexOf("=") + 1);
+                }else if (i.contains("field")){
+                    this.field = i.substring(i.lastIndexOf("=")+1);
+
+                } else if (i.contains("val")) {
+                    this.val = Integer.parseInt(i.substring(i.lastIndexOf("=")+1));
+                } else if (i.contains("cond")) {
+                    String cond = i.substring(i.lastIndexOf("=")+1);
+                    if (cond.equals("larger")){
+                        this.cond = ">";
+                    } else if (cond.equals("smaller")){
+                        this.cond = "<";
+                    }else if (cond.equals("smallerEqual")){
+                        this.cond = "<=";
+                    }else if (cond.equals("largerEqual")){
+                        this.cond = ">=";
+                    }
+                }
+            }
+
+        }
+
+        @Override
             public void handle(HttpExchange exchange) throws IOException {
                 UsersQuery connect = new UsersQuery();
                 ProductsQuery connect2 = new ProductsQuery();
@@ -35,8 +68,29 @@ private static final int p=8068;
                 String method = exchange.getRequestMethod();
                 String path = exchange.getRequestURI().getPath();
                 String[] pathRoot = exchange.getRequestURI().getPath().split("/");
+                String query = exchange.getRequestURI().getQuery();
 
-                if ("GET".equals(method) && "/users".equals(path)) {
+
+                if(query != null){
+                     if(query.matches("field")  && "GET".equals(method)){
+                        outputStream = exchange.getResponseBody();
+                        try {
+                            queryCheck(query);
+                            ResponseToSendBack = connect.userField(this.field, this.cond, this.val).toString();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }else if(query.contains("type")  && "GET".equals(method)) {
+                         outputStream = exchange.getResponseBody();
+                         try {
+                             queryCheck(query);
+                             System.out.println(this.type);
+                             ResponseToSendBack = connect.userType(this.type).toString();
+                         } catch (Exception e) {
+                             throw new RuntimeException(e);
+                         }
+                    }
+                }else if ("GET".equals(method) && "/users".equals(path)) {
                     outputStream = exchange.getResponseBody();
                     try {
                         ResponseToSendBack = connect.selectAll().toString();

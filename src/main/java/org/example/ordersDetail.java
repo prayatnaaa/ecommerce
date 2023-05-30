@@ -1,3 +1,5 @@
+package org.example;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -20,7 +22,7 @@ public class ordersDetail {
 
     public JSONArray selectAll() throws SQLException {
         JSONArray jsonArray = new JSONArray();
-        String sql = "SELECT * FROM orders_details";
+        String sql = "SELECT * FROM orders";
 
         try (Connection conn = connection();
              Statement statement = conn.createStatement();
@@ -50,7 +52,7 @@ public class ordersDetail {
 
     public JSONArray selectOrdersDetail (int orderDetail) throws SQLException {
         JSONArray jsonArray = new JSONArray();
-        String sql = "SELECT * FROM orders_details WHERE id=" + orderDetail;
+        String sql = "SELECT * FROM orders WHERE id=" + orderDetail;
 
         try (Connection conn = connection();
              Statement statement = conn.createStatement();
@@ -79,7 +81,7 @@ public class ordersDetail {
     }
 
     public void deleteOrder(int ordersId) {
-        String sql = "DELETE FROM orders_details WHERE id=" + ordersId;
+        String sql = "DELETE FROM orders WHERE id=" + ordersId;
         try (Connection conn = connection();
              Statement statement = conn.createStatement();) {
             statement.executeUpdate(sql);
@@ -99,7 +101,7 @@ public class ordersDetail {
         PreparedStatement statement = null;
         int rowsAffected = 0;
 
-        String query = "INSERT INTO orders_details (order, product, quantity, price) VALUES(?,?,?,?)";
+        String query = "INSERT INTO orders (order, product, quantity, price) VALUES(?,?,?,?)";
         try{
             statement = this.connection().prepareStatement(query);
             statement.setInt(1, order);
@@ -123,7 +125,7 @@ public class ordersDetail {
         PreparedStatement statement = null;
         int rowsAffected = 0;
 
-        String query = "UPDATE orders_details SET order = ?, product = ?, quantity = ?, price = ? WHERE order=" + orderId;
+        String query = "UPDATE orders SET order = ?, product = ?, quantity = ?, price = ? WHERE order=" + orderId;
         try {
             statement = this.connection().prepareStatement(query);
             statement.setInt(1, order);

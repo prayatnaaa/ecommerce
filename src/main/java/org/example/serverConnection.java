@@ -62,6 +62,7 @@ private static final int p=8068;
                 UsersQuery connect = new UsersQuery();
                 ProductsQuery connect2 = new ProductsQuery();
                 OrdersQuery connect3 = new OrdersQuery();
+                ordersDetail connect4 = new ordersDetail();
 
                 String ResponseToSendBack = "";
                 OutputStream outputStream = exchange.getResponseBody();
@@ -103,6 +104,22 @@ private static final int p=8068;
                     outputStream = exchange.getResponseBody();
                     try {
                         ResponseToSendBack = connect.selectUser(userId).toString();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }else if ("GET".equals(method) && "/ordersDetails".equals(path)) {
+                    outputStream = exchange.getResponseBody();
+                    try {
+                        ResponseToSendBack = connect4.selectAll().toString();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                } else if ("GET".equals(method) && path.matches("/ordersDetails/\\d+")) {
+                    String[] pathParts = path.split("/");
+                    int odId = Integer.parseInt(pathParts[pathParts.length - 1]);
+                    outputStream = exchange.getResponseBody();
+                    try {
+                        ResponseToSendBack = connect4.selectOrdersDetail(odId).toString();
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -172,6 +189,18 @@ private static final int p=8068;
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
+                } else if("DELETE".equals(method) && path.matches("/ordersDetails/\\d+")){
+                    String[] pathParts = path.split("/");
+                    int odId = Integer.parseInt(pathParts[pathParts.length - 1]);
+                    outputStream = exchange.getResponseBody();
+                    try {
+                        connect.deleteUser(odId);
+                        String response = "Orders Details with ID " + odId + " has been deleted.";
+                        exchange.sendResponseHeaders(200, response.length());
+                        outputStream.write(response.getBytes());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
 
                 else if("POST".equals(method) && path.matches("/user")){
@@ -183,6 +212,9 @@ private static final int p=8068;
                 }else if("POST".equals(method) && path.matches("/order")){
                     JSONObject requestBodyJSON = parseRequestBody(exchange.getRequestBody());
                     ResponseToSendBack = connect3.postMethod(requestBodyJSON);
+                }else if("POST".equals(method) && path.matches("/ordersDetails")){
+                    JSONObject requestBodyJSON = parseRequestBody(exchange.getRequestBody());
+                    ResponseToSendBack = connect4.postMethod(requestBodyJSON);
                 }
 
                 else if ("PUT".equals(method) && path.matches("/user/\\d+")){
@@ -194,6 +226,9 @@ private static final int p=8068;
                 }else if ("PUT".equals(method) && path.matches("/order/\\d+")){
                     JSONObject requestBodyJSON = parseRequestBody(exchange.getRequestBody());
                     ResponseToSendBack = connect3.putMethod(path, requestBodyJSON);
+                }else if ("PUT".equals(method) && path.matches("/orderDetails/\\d+")){
+                    JSONObject requestBodyJSON = parseRequestBody(exchange.getRequestBody());
+                    ResponseToSendBack = connect4.putMethod(path, requestBodyJSON);
                 }
 
                 else if ("GET".equals(method) && path.matches("/product/\\d+")){

@@ -2,7 +2,11 @@
 <p align="center">By Tude Prayatna</p>
 
 # **Pengenalan**
-## Penggunaan -->
+
+Program ECOMMERCE merupakan program yang menggunakan API 
+untuk mengakses DAN memanipulasi data dari setiap entitas dari 
+database. Berikut merupakan README mengenai program ECOMMERCE.
+
 ### **Alur Program**
 **1) GET**
 <br>
